@@ -33,6 +33,8 @@ def go(args):
     df['last_review'] = pd.to_datetime(df['last_review'])
 
     outfile =f"{args.output_artifact}"
+    idx = df['longitude'].between(-74.25, -73.50) & df['latitude'].between(40.5, 41.2)
+    df = df[idx].copy()
     df.to_csv("clean_sample.csv", index=False)
 
     logger.info("Upload clean data")
