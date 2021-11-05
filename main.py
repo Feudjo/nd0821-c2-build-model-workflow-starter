@@ -14,19 +14,15 @@ _steps = [
     "basic_cleaning",
     "data_check",
     "data_split",
-    "train_random_forest",
-    # NOTE: We do not include this in the steps so it is not run by mistake.
-    # You first need to promote a model export to "prod" before you can run this,
-    # then you need to run this step explicitly
-#    "test_regression_model"
+    "train_random_forest"
 ]
 
 
-# This automatically reads in the configuration
+
 @hydra.main(config_name='config')
 def go(config: DictConfig):
 
-    # Setup the wandb experiment. All runs will be grouped under this name
+    # Setup the wandb experiment.
     os.environ["WANDB_PROJECT"] = config["main"]["project_name"]
     os.environ["WANDB_RUN_GROUP"] = config["main"]["experiment_name"]
 
@@ -51,6 +47,7 @@ def go(config: DictConfig):
             )
 
         if "basic_cleaning" in active_steps:
+            # Do some basic clean.
             _ = mlflow.run(
                     os.path.join(hydra.utils.get_original_cwd(), "src", "basic_cleaning"),
                     "main",
@@ -65,6 +62,7 @@ def go(config: DictConfig):
                 )
 
         if "data_check" in active_steps:
+            # Validate data
             _ = mlflow.run(
                     os.path.join(hydra.utils.get_original_cwd(), "src", "data_check"),
                     "main",
@@ -79,6 +77,7 @@ def go(config: DictConfig):
 
 
         if "data_split" in active_steps:
+            # Split train and test set
             _ = mlflow.run(
                     f"{config['main']['components_repository']}/train_val_test_split",
                     "main",
@@ -94,13 +93,10 @@ def go(config: DictConfig):
 
         if "train_random_forest" in active_steps:
 
-            # NOTE: we need to serialize the random forest configuration into JSON
+            # Serialize the random forest configuration into JSON
             rf_config = os.path.abspath("rf_config.json")
             with open(rf_config, "w+") as fp:
-                json.dump(dict(config["modeling"]["random_forest"].items()), fp)  # DO NOT TOUCH
-
-            # NOTE: use the rf_config we just created as the rf_config parameter for the train_random_forest
-            # step
+                json.dump(dict(config["modeling"]["random_forest"].items()), fp)
 
             _ = mlflow.run(
                 os.path.join(hydra.utils.get_original_cwd(), "src", "train_random_forest"),

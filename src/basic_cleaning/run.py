@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
-Downloads the raw dataset from wandb and apply some basic data cleaning, exporting the result to a new artifact
+Downloads the raw dataset from wandb and apply some basic data cleaning,
+exporting the result to a new artifact.
 """
 import argparse
 import logging
@@ -17,13 +18,9 @@ def go(args):
     run = wandb.init(job_type="basic_cleaning")
     run.config.update(args)
 
-    # Download input artifact. This will also log that this script is using this
-    # particular version of the artifact
+    # Download input artifact.
     artifact_local_path = run.use_artifact(args.input_artifact).file()
 
-    ######################
-    # YOUR CODE HERE     #
-    ######################
     logger.info('Reading dataframe')
     df = pd.read_csv(artifact_local_path)
 
@@ -33,7 +30,13 @@ def go(args):
     df['last_review'] = pd.to_datetime(df['last_review'])
 
     outfile =f"{args.output_artifact}"
-    idx = df['longitude'].between(-74.25, -73.50) & df['latitude'].between(40.5, 41.2)
+    idx = df['longitude'].between(
+        -74.25,
+        -73.50
+        ) & df['latitude'].between(
+            40.5,
+            41.2
+            )
     df = df[idx].copy()
     df.to_csv("clean_sample.csv", index=False)
 
